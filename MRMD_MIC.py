@@ -15,6 +15,7 @@ def usage():
     print("-a , --optimize :   the optimized result file name")
     print("-n , --process num :   the number of process , default(1)")
     print("-t , --treesnum :  number of decision trees , default(100)")
+    print("-c , --csv :  make features'rate and f1 into a csv file")
 
 def Multi_Process_MIC(feanum, feaData, label, n):  # 多进程计算MIC
     manager = Manager()
@@ -46,7 +47,6 @@ def MIC(feanum, feaData, label, q, d):
         d[i] = mine.mic()
         # print(mine.mic())
 
-
 def write_optimizeResultFile(file, MIC_value, optnum):  # 排序好的最优mic序列
     i = 0
     with open(file, "w") as f:
@@ -63,11 +63,12 @@ def write_optimizeResultFile(file, MIC_value, optnum):  # 排序好的最优mic�
 def main():
     output = "out_random" + str(int(time.time()) % 1000) + ".libsvm"
     optimize_result_file = "opt_sorted_result" + str(int(time.time() * 1000) % 1000) + ".txt"
+    csv="rate_f1"+ str(int(time.time() * 100) % 1000)+".csv"
     np = 4
     decision_trees=100
     #input="20D.libsvm"
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hi:o:a:n:t:", ["help", "inputfile", "outputfile", "optimizeResult", "process num","decision_trees"])
+        opts, args = getopt.getopt(sys.argv[1:], "hi:o:a:n:t:c:", ["help", "inputfile", "outputfile", "optimizeResult", "process num","decision_trees","csv"])
     except getopt.GetoptError:
         exit(-1)
     for o, v in opts:
@@ -84,7 +85,8 @@ def main():
             np = int(v)
         elif o in ("-t", "--decision_tress"):
             decision_trees = int(v)
-
+        elif o in ("-c","--csv"):
+            csv=v
     data = prepData(input)  # 加载数据
     insData = data.getInstance()
 
@@ -102,8 +104,8 @@ def main():
     for key, value in MIC_value:
         print("fea{0} ={1}".format(key, value))
 
-    optnum,rate = skClassifier(insData,Y,decision_trees).getOptlist(MIC_value)
-
+    #optnum,rate = skClassifier(insData,Y,decision_trees,csv).getOptlist(MIC_value)
+    optnum, rate = skClassifier(insData, Y, decision_trees,csv).getOptlist(MIC_value)
     print("The best feature number =%d" % optnum)
     rate=rate*100
     print("The best rate =%0.2f%%"%rate)
@@ -122,6 +124,7 @@ def main():
     write_optimizeResultFile(optimize_result_file, MIC_value, optnum)
 
     print("the output file name is : {0}".format(output))
+    print("the accurate and f1 score file name is : {0}".format(csv))
     print("the name of optimized sorted feature file  is : {0}".format(optimize_result_file))
     print("done!!")
 
